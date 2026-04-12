@@ -1,0 +1,239 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 1415,
+      "max": [
+        3.2993698120117188,
+        0.263172447681427,
+        3.399937152862549
+      ],
+      "min": [
+        -3.2993698120117188,
+        -0.2498525083065033,
+        -7.544156074523926
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 16980,
+      "componentType": 5126,
+      "count": 1415,
+      "max": [
+        0.9999521970748901,
+        0.9999948740005493,
+        0.9988762736320496
+      ],
+      "min": [
+        -0.9999521970748901,
+        -0.9999986886978149,
+        -0.9998657703399658
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 1415,
+      "max": [
+        1.0,
+        1.0
+      ],
+      "min": [
+        0.0,
+        0.0
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 11320,
+      "componentType": 5126,
+      "count": 1415,
+      "max": [
+        1.0,
+        1.8721845149993896
+      ],
+      "min": [
+        0.0,
+        -0.720238447189331
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 7734,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "WillHenniker94 (https://sketchfab.com/WillHenniker94)",
+      "license": "CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)",
+      "source": "https://sketchfab.com/3d-models/human-base-mesh-male-7811b46b26cc41fdb7c32b48693d8af0",
+      "title": "Human Base Mesh Male"
+    },
+    "generator": "Sketchfab-12.56.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 30936,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 22640,
+      "byteOffset": 30936,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 33960,
+      "byteOffset": 53576,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 87536,
+      "uri": "scene.bin"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "Material_46",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.5757194013916181,
+          0.5757194013916181,
+          0.5757194013916181,
+          1.0
+        ],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.9300746216
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Base.002_Material #46_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TEXCOORD_0": 2,
+            "TEXCOORD_1": 3
+          },
+          "indices": 4,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        0.009999999776482582,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.009999999776482582,
+        0.0,
+        0.0,
+        -0.009999999776482582,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "54e6f801220f40eb97a5b53a8aa3ac0b.fbx"
+    },
+    {
+      "children": [
+        3
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4
+      ],
+      "matrix": [
+        25.187374114990234,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.629206793918314e-05,
+        -99.99999999999868,
+        0.0,
+        0.0,
+        25.1873741149899,
+        -4.1035441029104375e-06,
+        0.0,
+        2.3537254333496094,
+        50.76515197753906,
+        0.0,
+        1.0
+      ],
+      "name": "Base.002"
+    },
+    {
+      "mesh": 0,
+      "name": "Base.002_Material #46_0"
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}

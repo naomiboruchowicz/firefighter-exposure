@@ -1,0 +1,11 @@
+Model Information:
+* title:	Human Base Mesh Male
+* source:	https://sketchfab.com/3d-models/human-base-mesh-male-7811b46b26cc41fdb7c32b48693d8af0
+* author:	WillHenniker94 (https://sketchfab.com/WillHenniker94)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Human Base Mesh Male" (https://sketchfab.com/3d-models/human-base-mesh-male-7811b46b26cc41fdb7c32b48693d8af0) by WillHenniker94 (https://sketchfab.com/WillHenniker94) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
