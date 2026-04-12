@@ -45,7 +45,8 @@ function CameraSetup({ center }: { center: Vector3 }) {
   )
 }
 
-function Stage({ fires, selectedFireId, timeIndex }: StageProps) {
+function Stage({ fires, selectedFireId, timeIndex, onReady }: StageProps & { onReady?: () => void }) {
+  const readyFired = useRef(false)
   const { scene } = useGLTF('/models/human_base_mesh_male/scene.gltf')
   const [particles, setParticles] = useState<FireParticles[]>([])
   const [bodyCenter, setBodyCenter] = useState(new Vector3(0, 0, 0))
@@ -91,7 +92,11 @@ function Stage({ fires, selectedFireId, timeIndex }: StageProps) {
       generateFireParticlesUniform(fire, mesh, bbox)
     )
     setParticles(newParticles)
-  }, [fires])
+    if (!readyFired.current && onReady) {
+      readyFired.current = true
+      onReady()
+    }
+  }, [fires, onReady])
 
   const anySelected = selectedFireId !== null
   const visibleParticles = particles.filter((_, i) => i < timeIndex)
@@ -160,9 +165,10 @@ type SceneProps = {
   selectedFireId: string | null
   onSelectFire: (id: string | null) => void
   timeIndex: number
+  onReady?: () => void
 }
 
-export default function Scene({ fires, selectedFireId, onSelectFire, timeIndex }: SceneProps) {
+export default function Scene({ fires, selectedFireId, onSelectFire, timeIndex, onReady }: SceneProps) {
   return (
     <Canvas
       camera={{ position: [0, 0, 5], fov: 42 }}
@@ -182,6 +188,7 @@ export default function Scene({ fires, selectedFireId, onSelectFire, timeIndex }
           selectedFireId={selectedFireId}
           onSelectFire={onSelectFire}
           timeIndex={timeIndex}
+          onReady={onReady}
         />
       </Suspense>
     </Canvas>

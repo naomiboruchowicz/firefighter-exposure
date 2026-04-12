@@ -105,12 +105,15 @@ type UserProfile = {
 
 export default function App() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [sceneReady, setSceneReady] = useState(false)
   const [selectedFireId, setSelectedFireId] = useState<string | null>(null)
   const [timeIndex, setTimeIndex] = useState(0)
   const [introComplete, setIntroComplete] = useState(false)
   const [currentFireLabel, setCurrentFireLabel] = useState<string | null>(null)
   const [currentFireYear, setCurrentFireYear] = useState<number | null>(null)
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pendingFires = useRef<Fire[] | null>(null)
 
   const activeFires = profile?.fires ?? FIRES
   const visibleFires = useMemo(() => activeFires.slice(0, timeIndex), [activeFires, timeIndex])
@@ -125,39 +128,50 @@ export default function App() {
     setCurrentFireYear(null)
     setSelectedFireId(null)
 
-    const delay = setTimeout(() => {
-      playRef.current = setInterval(() => {
-        step++
-        if (step > fires.length) {
-          if (playRef.current) clearInterval(playRef.current)
-          setCurrentFireLabel(null)
-          setCurrentFireYear(null)
-          setIntroComplete(true)
-          return
-        }
-        setTimeIndex(step)
-        setCurrentFireLabel(fires[step - 1].name)
-        setCurrentFireYear(fires[step - 1].year)
-      }, 1500)
-    }, 600)
+    // Total animation stays ~7s regardless of fire count
+    const interval = Math.max(450, Math.min(1200, 7000 / fires.length))
+
+    playRef.current = setInterval(() => {
+      step++
+      if (step > fires.length) {
+        if (playRef.current) clearInterval(playRef.current)
+        setCurrentFireLabel(null)
+        setCurrentFireYear(null)
+        setIntroComplete(true)
+        return
+      }
+      setTimeIndex(step)
+      setCurrentFireLabel(fires[step - 1].name)
+      setCurrentFireYear(fires[step - 1].year)
+    }, interval)
 
     return () => {
-      clearTimeout(delay)
       if (playRef.current) clearInterval(playRef.current)
     }
   }, [])
 
-  const handleViewDemo = useCallback(() => {
-    setProfile({ name: DANIEL.name, crew: DANIEL.role, fires: FIRES })
-    startIntro(FIRES)
+  const handleSceneReady = useCallback(() => {
+    setSceneReady(true)
+    if (pendingFires.current) {
+      startIntro(pendingFires.current)
+      pendingFires.current = null
+    }
+    setLoading(false)
   }, [startIntro])
+
+  const handleViewDemo = useCallback(() => {
+    pendingFires.current = FIRES
+    setLoading(true)
+    setProfile({ name: DANIEL.name, crew: DANIEL.role, fires: FIRES })
+  }, [])
 
   const handleOnboardingComplete = useCallback(
     (name: string, crew: string, fires: Fire[]) => {
+      pendingFires.current = fires
+      setLoading(true)
       setProfile({ name, crew, fires })
-      startIntro(fires)
     },
-    [startIntro]
+    []
   )
 
   const replay = useCallback(() => {
@@ -177,17 +191,27 @@ export default function App() {
 
   return (
     <div className="app" onClick={profile ? () => handleSelectFire(null) : undefined}>
-      <div className={`canvas-bg${!profile ? ' preloading' : ''}`} style={!profile ? { opacity: 0 } : undefined}>
-        <Scene
-          fires={activeFires}
-          selectedFireId={selectedFireId}
-          onSelectFire={handleSelectFire}
-          timeIndex={timeIndex}
-        />
-      </div>
+      {profile && (
+        <div className="canvas-bg">
+          <Scene
+            fires={activeFires}
+            selectedFireId={selectedFireId}
+            onSelectFire={handleSelectFire}
+            timeIndex={timeIndex}
+            onReady={handleSceneReady}
+          />
+        </div>
+      )}
 
-      {!profile && (
+      {!profile && !loading && (
         <Onboarding onComplete={handleOnboardingComplete} onViewDemo={handleViewDemo} />
+      )}
+
+      {loading && !sceneReady && (
+        <div className="loading-screen">
+          <div className="loading-spinner" />
+          <div className="loading-text">Building your exposure record</div>
+        </div>
       )}
 
       {profile && !introComplete && timeIndex === 0 && !currentFireLabel && (

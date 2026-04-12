@@ -36,11 +36,6 @@
   height: 100% !important;
 }
 
-.canvas-bg.preloading,
-.canvas-bg.preloading * {
-  pointer-events: none !important;
-}
-
 /* ============ Header ============ */
 
 .header {
@@ -97,6 +92,7 @@
 .onboarding {
   position: fixed;
   inset: 0;
+  z-index: 20;
   background: var(--bg);
   display: flex;
   flex-direction: column;
@@ -149,6 +145,10 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.field {
+  position: relative;
 }
 
 .field-label {
@@ -222,8 +222,14 @@
 
 .crew-dropdown {
   list-style: none;
-  margin: 4px 0 0;
+  margin: 0;
   padding: 4px 0;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  margin-top: 4px;
   background: rgba(18, 21, 28, 0.95);
   border: 1px solid var(--glass-border);
   border-radius: 4px;
@@ -486,6 +492,45 @@
 
 .demo-link:hover {
   color: var(--text-dim);
+}
+
+/* ============ Loading screen ============ */
+
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  animation: loading-fade-in 0.3s ease;
+}
+
+@keyframes loading-fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+.loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(232, 235, 240, 0.1);
+  border-top-color: var(--text-faint);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--text-faint);
 }
 
 /* ============ Intro context ============ */
