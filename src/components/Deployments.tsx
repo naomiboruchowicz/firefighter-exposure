@@ -1,4 +1,4 @@
-import { FIRES, type Fire } from '../data/fires'
+import type { Fire } from '../data/fires'
 
 type Totals = {
   days: number
@@ -10,6 +10,7 @@ type Totals = {
 }
 
 type Props = {
+  fires: Fire[]
   selectedFireId: string | null
   onSelectFire: (id: string | null) => void
   timeIndex: number
@@ -29,33 +30,6 @@ function fmt(n: number): string {
   return n.toLocaleString('en-US')
 }
 
-// Average US city: ~10 µg/m³ PM2.5. Person breathes ~15 m³/day. Daily inhaled = 0.15 mg.
-const CITY_AIR_PM25_PER_DAY = 0.15
-
-// EPA dioxin reference dose: 0.7 pg/kg-day. 80kg person.
-const DIOXIN_SAFE_DAILY_UG = 0.7 * 80 * 1e-6 // in µg
-
-function pm25Context(mg: number): string {
-  const cityDays = Math.round(mg / CITY_AIR_PM25_PER_DAY)
-  if (cityDays > 365) {
-    const years = Math.round(cityDays / 365)
-    return `Equal to ${years} years of breathing city air`
-  }
-  return `Equal to ${cityDays} days of breathing city air`
-}
-
-function dioxinContext(ug: number, days: number): string {
-  const safeDoseForPeriod = DIOXIN_SAFE_DAILY_UG * days
-  const multiple = Math.round(ug / safeDoseForPeriod)
-  return `${fmt(multiple)}x the EPA safe dose for ${days} days`
-}
-
-const CHEM_CONTEXT: Record<string, string> = {
-  pahs_mg: 'Group 1 carcinogen (WHO/IARC)',
-  formaldehyde_mg: 'Known human carcinogen (IARC)',
-  benzene_mg: 'Any exposure above zero increases cancer risk (EPA)',
-}
-
 const CHEMS: {
   key: keyof Fire['chemicals']
   totalKey: keyof Totals
@@ -70,62 +44,61 @@ const CHEMS: {
   { key: 'dioxins_ug', totalKey: 'dioxins', label: 'Dioxins', color: 'rgb(255,64,115)', unit: 'µg' },
 ]
 
-function getContext(key: string, value: number, days: number): string | null {
-  if (key === 'pm25_mg') return pm25Context(value)
-  if (key === 'dioxins_ug') return dioxinContext(value, days)
-  return CHEM_CONTEXT[key] ?? null
-}
-
-function DetailPopover({ fire, totals: t }: { fire: Fire; totals: Totals }) {
+function DetailPopover({
+  fire,
+  totals: t,
+  onClose,
+}: {
+  fire: Fire
+  totals: Totals
+  onClose: () => void
+}) {
   return (
-    <div className="detail-popover">
-      <div className="detail-popover-header">
-        <div className="detail-popover-name">{fire.name}</div>
-        <div className="detail-popover-year">{fire.year}</div>
+    <div className="fire-detail-popover" onClick={(e) => e.stopPropagation()}>
+      <div className="fire-detail-popover-header">
+        <span className="fire-detail-popover-name">{fire.name} · {fire.year}</span>
+        <button className="fire-detail-popover-close" onClick={onClose}>×</button>
       </div>
-      <div className="detail-popover-location">{fire.location}</div>
-      <div className="detail-popover-dates">
-        {fire.startDate} → {fire.endDate} · {fire.daysWorked}d · {fmt(fire.acres)} acres
+
+      <div className="fire-detail-meta">
+        <div className="fire-detail-location">{fire.location}</div>
+        <div className="fire-detail-stats">
+          <span className="fire-detail-stat">
+            <span className="fire-detail-stat-value">{fire.daysWorked}</span> days
+          </span>
+          <span className="fire-detail-stat">
+            <span className="fire-detail-stat-value">{fmt(fire.acres)}</span> acres
+          </span>
+          <span className="fire-detail-stat">
+            {fire.startDate} → {fire.endDate}
+          </span>
+        </div>
       </div>
-      <div className="detail-popover-chems">
+
+      <div className="fire-detail-chems-label">Exposure</div>
+      <div className="fire-detail-chems">
         {CHEMS.map((ch) => {
           const val = fire.chemicals[ch.key]
           const total = t[ch.totalKey] as number
           const pct = total > 0 ? Math.round((val / total) * 100) : 0
-          const context = getContext(ch.key, val, fire.daysWorked)
           return (
-            <div key={ch.key} className="fire-chem-group">
-              <div className="fire-chem-row">
-                <span className="chem-dot" style={{ background: ch.color }} />
-                <span className="chem-name">{ch.label}</span>
-                <span className="chem-value">
-                  {fmtDec(val, val < 1 ? 2 : val < 100 ? 1 : 0)} {ch.unit}
-                </span>
-                <span className="chem-pct">{pct}%</span>
-              </div>
-              {context && <div className="chem-context">{context}</div>}
+            <div key={ch.key} className="fire-chem-row">
+              <span className="chem-dot" style={{ background: ch.color }} />
+              <span className="chem-name">{ch.label}</span>
+              <span className="chem-value">
+                {fmtDec(val, val < 1 ? 2 : val < 100 ? 1 : 0)} {ch.unit}
+              </span>
+              <span className="chem-pct">{pct}%</span>
             </div>
           )
         })}
-      </div>
-
-      <button className="export-btn" onClick={(e) => e.stopPropagation()}>
-        Export exposure record
-      </button>
-
-      <div className="detail-popover-sources">
-        <div className="sources-label">Data sources</div>
-        {fire.sources.map((s, i) => (
-          <a key={i} href={s.url} target="_blank" rel="noreferrer" className="source-link">
-            {s.label}
-          </a>
-        ))}
       </div>
     </div>
   )
 }
 
 export default function Deployments({
+  fires,
   selectedFireId,
   onSelectFire,
   timeIndex,
@@ -133,11 +106,18 @@ export default function Deployments({
   introComplete,
   totals: t,
 }: Props) {
+  const selectedFire = selectedFireId ? fires.find((f) => f.id === selectedFireId) ?? null : null
+
   return (
     <div className="deployments" onClick={(e) => e.stopPropagation()}>
-      <div className="deployments-title">Deployments</div>
-      <ul className="fire-list">
-        {FIRES.map((fire, i) => {
+      <div className={`deployments-list-wrap ${selectedFire ? 'hidden' : ''}`}>
+        <div className="deployments-header">
+          <span className="deployments-col-label">Deployments</span>
+          <span className="deployments-col-label right">Year</span>
+          <span className="deployments-col-label right">Days</span>
+        </div>
+        <ul className="fire-list">
+        {fires.map((fire, i) => {
           const arrived = i < timeIndex
           const selected = selectedFireId === fire.id
           return (
@@ -157,15 +137,21 @@ export default function Deployments({
                 }}
               >
                 <span className="fire-name">{fire.name}</span>
-                <span className="fire-meta">
-                  {fire.year} · {fire.daysWorked}d
-                </span>
+                <span className="fire-year">{fire.year}</span>
+                <span className="fire-days">{fire.daysWorked}</span>
               </button>
-              {selected && <DetailPopover fire={fire} totals={t} />}
             </li>
           )
         })}
-      </ul>
+        </ul>
+      </div>
+      {selectedFire && (
+        <DetailPopover
+          fire={selectedFire}
+          totals={t}
+          onClose={() => onSelectFire(null)}
+        />
+      )}
     </div>
   )
 }

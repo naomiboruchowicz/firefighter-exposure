@@ -8,7 +8,7 @@ import {
   Vector3,
   type MeshStandardMaterial,
 } from 'three'
-import { FIRES } from '../data/fires'
+import type { Fire } from '../data/fires'
 import {
   generateFireParticlesUniform,
   type FireParticles,
@@ -17,8 +17,10 @@ import {
 useGLTF.preload('/models/human_base_mesh_male/scene.gltf')
 
 type StageProps = {
+  fires: Fire[]
   selectedFireId: string | null
   onSelectFire: (id: string | null) => void
+  timeIndex: number
 }
 
 function CameraSetup({ center }: { center: Vector3 }) {
@@ -26,7 +28,7 @@ function CameraSetup({ center }: { center: Vector3 }) {
   const controlsRef = useRef<any>(null)
 
   useEffect(() => {
-    camera.position.set(center.x, center.y + 0.15, center.z + 3.6)
+    camera.position.set(center.x, center.y + 0.15, center.z + 4.8)
     camera.lookAt(center)
     if (controlsRef.current) {
       controlsRef.current.target.copy(center)
@@ -38,27 +40,28 @@ function CameraSetup({ center }: { center: Vector3 }) {
     <OrbitControls
       ref={controlsRef}
       enablePan={false}
-      minDistance={1.5}
-      maxDistance={8}
+      enableZoom={false}
     />
   )
 }
 
-function Stage({ selectedFireId, onSelectFire, timeIndex }: StageProps) {
+function Stage({ fires, selectedFireId, onSelectFire, timeIndex }: StageProps) {
   const { scene } = useGLTF('/models/human_base_mesh_male/scene.gltf')
   const [particles, setParticles] = useState<FireParticles[]>([])
   const [bodyCenter, setBodyCenter] = useState(new Vector3(0, 0, 0))
-  const initialized = useRef(false)
+  const meshRef = useRef<Mesh | null>(null)
+  const bboxRef = useRef<Box3 | null>(null)
+  const materialSetup = useRef(false)
 
+  // Set up mesh material once
   useEffect(() => {
-    if (initialized.current) return
-    initialized.current = true
+    if (materialSetup.current) return
+    materialSetup.current = true
 
-    let mesh: Mesh | null = null
     scene.traverse((obj) => {
       const m = obj as Mesh
-      if (m.isMesh && !mesh) {
-        mesh = m
+      if (m.isMesh && !meshRef.current) {
+        meshRef.current = m
         const material = m.material as MeshStandardMaterial
         material.transparent = true
         material.opacity = 0.16
@@ -68,26 +71,27 @@ function Stage({ selectedFireId, onSelectFire, timeIndex }: StageProps) {
       }
     })
 
-    if (!mesh) return
+    if (!meshRef.current) return
 
     scene.updateMatrixWorld(true)
     const bbox = new Box3().setFromObject(scene)
+    bboxRef.current = bbox
     const center = new Vector3()
     bbox.getCenter(center)
     setBodyCenter(center)
+  }, [scene])
 
-    console.log('Body bbox:', bbox.min.toArray(), bbox.max.toArray())
-    console.log('Body center:', center.toArray())
+  // Generate particles when fires change
+  useEffect(() => {
+    if (!meshRef.current || !bboxRef.current) return
+    const mesh = meshRef.current
+    const bbox = bboxRef.current
 
-    const newParticles = FIRES.map((fire) =>
-      generateFireParticlesUniform(fire, mesh!, bbox)
+    const newParticles = fires.map((fire) =>
+      generateFireParticlesUniform(fire, mesh, bbox)
     )
     setParticles(newParticles)
-    console.log(
-      'Total particles:',
-      newParticles.reduce((s, p) => s + p.count, 0)
-    )
-  }, [scene])
+  }, [fires])
 
   const anySelected = selectedFireId !== null
   const visibleParticles = particles.filter((_, i) => i < timeIndex)
@@ -120,7 +124,7 @@ function FireCloud({ fp, selected, anySelected }: FireCloudProps) {
   let opacity = 0.92
   if (anySelected) opacity = selected ? 1 : 0.05
 
-  const size = selected ? 0.08 : 0.05
+  const size = 0.03
 
   if (count === 0) return null
 
@@ -152,12 +156,13 @@ function FireCloud({ fp, selected, anySelected }: FireCloudProps) {
 }
 
 type SceneProps = {
+  fires: Fire[]
   selectedFireId: string | null
   onSelectFire: (id: string | null) => void
   timeIndex: number
 }
 
-export default function Scene({ selectedFireId, onSelectFire, timeIndex }: SceneProps) {
+export default function Scene({ fires, selectedFireId, onSelectFire, timeIndex }: SceneProps) {
   return (
     <Canvas
       camera={{ position: [0, 0, 5], fov: 42 }}
@@ -173,6 +178,7 @@ export default function Scene({ selectedFireId, onSelectFire, timeIndex }: Scene
       />
       <Suspense fallback={null}>
         <Stage
+          fires={fires}
           selectedFireId={selectedFireId}
           onSelectFire={onSelectFire}
           timeIndex={timeIndex}

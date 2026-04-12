@@ -1,4 +1,5 @@
 import type { Fire } from '../data/fires'
+import { exportExposureRecord } from '../lib/exportPdf'
 
 type TotalsData = {
   days: number
@@ -12,6 +13,9 @@ type TotalsData = {
 type Props = {
   visibleFires: Fire[]
   totals: TotalsData
+  name: string
+  crew: string
+  allFires: Fire[]
 }
 
 function fmtDec(n: number, places = 1): string {
@@ -25,12 +29,12 @@ function fmt(n: number): string {
   return n.toLocaleString('en-US')
 }
 
-const CITY_AIR_PM25_PER_DAY = 0.15
 const DIOXIN_SAFE_DAILY_UG = 0.7 * 80 * 1e-6
+const PM25_PER_CIGARETTE_MG = 12
 
 function pm25Context(mg: number): string {
-  const years = Math.round(mg / CITY_AIR_PM25_PER_DAY / 365)
-  return `${years} years of breathing city air`
+  const cigs = Math.round(mg / PM25_PER_CIGARETTE_MG)
+  return `Equivalent to smoking ${fmt(cigs)} cigarettes`
 }
 
 function dioxinContext(ug: number, days: number): string {
@@ -46,7 +50,6 @@ type ChemConfig = {
   unit: string
   transform?: (v: number) => { value: string; unit: string }
   context: (val: number, days: number) => string | null
-  contextColor?: string
 }
 
 const CHEMS: ChemConfig[] = [
@@ -63,7 +66,7 @@ const CHEMS: ChemConfig[] = [
     label: 'PAHs',
     color: 'rgb(255,179,51)',
     unit: 'mg',
-    context: () => 'Group 1 carcinogen (WHO/IARC)',
+    context: () => 'Classified Group 1 carcinogen by WHO',
   },
   {
     key: 'formaldehyde',
@@ -77,8 +80,7 @@ const CHEMS: ChemConfig[] = [
     label: 'Benzene',
     color: 'rgb(77,179,255)',
     unit: 'mg',
-    context: () => 'Any exposure above zero increases cancer risk (EPA)',
-    contextColor: 'rgb(77,179,255)',
+    context: () => 'No safe exposure level exists (EPA)',
   },
   {
     key: 'dioxins',
@@ -86,12 +88,11 @@ const CHEMS: ChemConfig[] = [
     color: 'rgb(255,64,115)',
     unit: 'µg',
     context: (v, d) => dioxinContext(v, d),
-    contextColor: 'rgb(255,64,115)',
   },
 ]
 
-export default function Totals({ visibleFires, totals: t }: Props) {
-  const pm25Years = t.pm25 > 0 ? Math.round(t.pm25 / CITY_AIR_PM25_PER_DAY / 365) : 0
+export default function Totals({ visibleFires, totals: t, name, crew, allFires }: Props) {
+  const pm25Cigs = t.pm25 > 0 ? Math.round(t.pm25 / PM25_PER_CIGARETTE_MG) : 0
 
   return (
     <div className="totals" onClick={(e) => e.stopPropagation()}>
@@ -108,10 +109,10 @@ export default function Totals({ visibleFires, totals: t }: Props) {
         </div>
       </div>
 
-      {pm25Years > 0 && (
+      {pm25Cigs > 0 && (
         <div className="totals-headline">
-          <span className="totals-headline-number">{pm25Years}</span>
-          <span className="totals-headline-unit">years of city air inhaled</span>
+          <span className="totals-headline-number">{fmt(pm25Cigs)}</span>
+          <span className="totals-headline-unit">cigarettes worth of particulate inhaled</span>
         </div>
       )}
 
@@ -135,11 +136,8 @@ export default function Totals({ visibleFires, totals: t }: Props) {
                   {display.value} {display.unit}
                 </span>
               </div>
-              {context && ch.key !== 'pm25' && (
-                <div
-                  className="chem-context"
-                  style={ch.contextColor ? { color: ch.contextColor, opacity: 0.75 } : undefined}
-                >
+              {context && (
+                <div className="chem-context">
                   {context}
                 </div>
               )}
@@ -148,7 +146,37 @@ export default function Totals({ visibleFires, totals: t }: Props) {
         })}
       </div>
 
-      <button className="export-btn">Export exposure record</button>
+      <button
+        className="export-btn"
+        onClick={() => {
+          const allTotals = allFires.reduce(
+            (acc, f) => {
+              acc.days += f.daysWorked
+              acc.pm25 += f.chemicals.pm25_mg
+              acc.pahs += f.chemicals.pahs_mg
+              acc.formaldehyde += f.chemicals.formaldehyde_mg
+              acc.benzene += f.chemicals.benzene_mg
+              acc.dioxins += f.chemicals.dioxins_ug
+              return acc
+            },
+            { days: 0, pm25: 0, pahs: 0, formaldehyde: 0, benzene: 0, dioxins: 0, cigarettes: 0 }
+          )
+          allTotals.cigarettes = Math.round(allTotals.pm25 / PM25_PER_CIGARETTE_MG)
+          exportExposureRecord(name, crew, allFires, allTotals)
+        }}
+      >
+        Export exposure record
+      </button>
+
+      <div className="totals-sources">
+        <div className="sources-label">Data sources</div>
+        <div className="sources-inline">
+          <a href="https://doi.org/10.5194/acp-11-4039-2011" target="_blank" rel="noreferrer" className="source-link">Akagi et al. 2011</a>
+          <a href="https://doi.org/10.1016/j.foreco.2013.06.043" target="_blank" rel="noreferrer" className="source-link">Urbanski 2014</a>
+          <a href="https://doi.org/10.1289/EHP2298" target="_blank" rel="noreferrer" className="source-link">Rappold et al. 2017</a>
+          <a href="https://www.epa.gov/iris" target="_blank" rel="noreferrer" className="source-link">EPA IRIS</a>
+        </div>
+      </div>
     </div>
   )
 }

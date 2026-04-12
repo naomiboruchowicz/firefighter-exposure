@@ -76,11 +76,13 @@ function FireDetail({ fire, totals: t }: { fire: Fire; totals: Totals }) {
         })}
       </div>
       <div className="fire-detail-sources">
-        {fire.sources.map((s, i) => (
-          <a key={i} href={s.url} target="_blank" rel="noreferrer" className="source-link">
-            {s.label}
-          </a>
-        ))}
+        <div className="sources-inline">
+          {fire.sources.map((s, i) => (
+            <a key={i} href={s.url} target="_blank" rel="noreferrer" className="source-link">
+              {s.label}
+            </a>
+          ))}
+        </div>
       </div>
     </div>
   )
