@@ -45,7 +45,7 @@ function CameraSetup({ center }: { center: Vector3 }) {
   )
 }
 
-function Stage({ fires, selectedFireId, onSelectFire, timeIndex }: StageProps) {
+function Stage({ fires, selectedFireId, timeIndex }: StageProps) {
   const { scene } = useGLTF('/models/human_base_mesh_male/scene.gltf')
   const [particles, setParticles] = useState<FireParticles[]>([])
   const [bodyCenter, setBodyCenter] = useState(new Vector3(0, 0, 0))

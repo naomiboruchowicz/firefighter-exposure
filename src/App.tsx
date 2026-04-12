@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import Onboarding from './components/Onboarding'
 import Scene from './components/Scene'
 import Deployments from './components/Deployments'
@@ -40,13 +40,11 @@ function ScrubberTrack({
   timeIndex,
   selectedFireId,
   onTimeIndexChange,
-  onSelectFire,
 }: {
   fires: Fire[]
   timeIndex: number
   selectedFireId: string | null
   onTimeIndexChange: (val: number) => void
-  onSelectFire: (id: string | null) => void
 }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const pcts = useMemo(() => getFirePcts(fires), [fires])
@@ -249,7 +247,6 @@ export default function App() {
                 setCurrentFireYear(null)
                 if (val >= activeFires.length) setIntroComplete(true)
               }}
-              onSelectFire={handleSelectFire}
             />
             {introComplete && (
               <button className="replay-btn" onClick={replay}>
