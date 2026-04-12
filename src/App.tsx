@@ -114,41 +114,53 @@ export default function App() {
   const [currentFireYear, setCurrentFireYear] = useState<number | null>(null)
   const playRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const pendingFires = useRef<Fire[] | null>(null)
+  const [playing, setPlaying] = useState(false)
 
   const activeFires = profile?.fires ?? FIRES
   const visibleFires = useMemo(() => activeFires.slice(0, timeIndex), [activeFires, timeIndex])
   const t = useMemo(() => totals(visibleFires), [visibleFires])
 
-  const startIntro = useCallback((fires: Fire[]) => {
-    let step = 0
+  const stopPlayback = useCallback(() => {
     if (playRef.current) clearInterval(playRef.current)
-    setTimeIndex(0)
-    setIntroComplete(false)
+    playRef.current = null
+    setPlaying(false)
     setCurrentFireLabel(null)
     setCurrentFireYear(null)
+  }, [])
+
+  const startPlayback = useCallback((fires: Fire[], fromStep = 0) => {
+    if (playRef.current) clearInterval(playRef.current)
+    let step = fromStep
+    setPlaying(true)
     setSelectedFireId(null)
 
-    // Total animation stays ~7s regardless of fire count
     const interval = Math.max(450, Math.min(1200, 7000 / fires.length))
 
     playRef.current = setInterval(() => {
       step++
       if (step > fires.length) {
         if (playRef.current) clearInterval(playRef.current)
+        playRef.current = null
         setCurrentFireLabel(null)
         setCurrentFireYear(null)
         setIntroComplete(true)
+        setPlaying(false)
         return
       }
       setTimeIndex(step)
       setCurrentFireLabel(fires[step - 1].name)
       setCurrentFireYear(fires[step - 1].year)
     }, interval)
-
-    return () => {
-      if (playRef.current) clearInterval(playRef.current)
-    }
   }, [])
+
+  const startIntro = useCallback((fires: Fire[]) => {
+    setTimeIndex(0)
+    setIntroComplete(false)
+    setCurrentFireLabel(null)
+    setCurrentFireYear(null)
+    setSelectedFireId(null)
+    startPlayback(fires, 0)
+  }, [startPlayback])
 
   const handleSceneReady = useCallback(() => {
     setSceneReady(true)
@@ -174,10 +186,19 @@ export default function App() {
     []
   )
 
-  const replay = useCallback(() => {
+  const togglePlayback = useCallback(() => {
     if (!profile) return
-    startIntro(profile.fires)
-  }, [profile, startIntro])
+    if (playing) {
+      stopPlayback()
+    } else {
+      // If at the end, restart from beginning
+      if (timeIndex >= profile.fires.length) {
+        startIntro(profile.fires)
+      } else {
+        startPlayback(profile.fires, timeIndex)
+      }
+    }
+  }, [profile, playing, timeIndex, stopPlayback, startPlayback, startIntro])
 
   const handleSelectFire = useCallback(
     (id: string | null) => {
@@ -214,7 +235,7 @@ export default function App() {
         </div>
       )}
 
-      {profile && !introComplete && timeIndex === 0 && !currentFireLabel && (
+      {profile && sceneReady && !introComplete && timeIndex === 0 && !currentFireLabel && (
         <div className="intro-context">
           <div className="intro-line">
             {activeFires.length} fires. {totalDays} days deployed.
@@ -230,7 +251,7 @@ export default function App() {
         </div>
       )}
 
-      {profile && (
+      {profile && sceneReady && (
         <>
           <header className={`header ${introComplete ? 'show' : 'intro'}`}>
             <div className="brand">BREATHLINE</div>
@@ -259,24 +280,31 @@ export default function App() {
           </div>
 
           <div className="scrubber">
+            {introComplete && (
+              <button className="play-btn" onClick={togglePlayback}>
+                {playing ? (
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                    <rect x="2" y="1" width="3.5" height="12" rx="1" />
+                    <rect x="8.5" y="1" width="3.5" height="12" rx="1" />
+                  </svg>
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                    <path d="M3 1.5v11l9-5.5z" />
+                  </svg>
+                )}
+              </button>
+            )}
             <ScrubberTrack
               fires={activeFires}
               timeIndex={timeIndex}
               selectedFireId={selectedFireId}
               onTimeIndexChange={(val) => {
+                stopPlayback()
                 setTimeIndex(val)
                 setSelectedFireId(null)
-                if (playRef.current) clearInterval(playRef.current)
-                setCurrentFireLabel(null)
-                setCurrentFireYear(null)
                 if (val >= activeFires.length) setIntroComplete(true)
               }}
             />
-            {introComplete && (
-              <button className="replay-btn" onClick={replay}>
-                Replay
-              </button>
-            )}
           </div>
         </>
       )}

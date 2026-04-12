@@ -113,8 +113,8 @@ export default function Deployments({
       <div className={`deployments-list-wrap ${selectedFire ? 'hidden' : ''}`}>
         <div className="deployments-header">
           <span className="deployments-col-label">Deployments</span>
-          <span className="deployments-col-label right">Year</span>
-          <span className="deployments-col-label right">Days</span>
+          <span className="deployments-col-label right">Yr</span>
+          <span className="deployments-col-label right">Da</span>
         </div>
         <ul className="fire-list">
         {fires.map((fire, i) => {
@@ -128,11 +128,10 @@ export default function Deployments({
                   if (!introComplete) return
                   if (selected) {
                     onSelectFire(null)
+                    onTimeIndexChange(fires.length)
                     return
                   }
-                  if (!arrived) {
-                    onTimeIndexChange(i + 1)
-                  }
+                  onTimeIndexChange(i + 1)
                   onSelectFire(fire.id)
                 }}
               >
@@ -149,7 +148,10 @@ export default function Deployments({
         <DetailPopover
           fire={selectedFire}
           totals={t}
-          onClose={() => onSelectFire(null)}
+          onClose={() => {
+            onSelectFire(null)
+            onTimeIndexChange(fires.length)
+          }}
         />
       )}
     </div>

@@ -78,7 +78,7 @@ function fire(
 
 export const DANIEL = {
   name: 'Daniel Ramirez',
-  role: 'Hotshot · Los Padres Hotshots',
+  role: 'Los Padres Hotshots',
   seasonsWorked: 9,
   careerStart: 2016,
 }
