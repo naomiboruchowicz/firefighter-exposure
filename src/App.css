@@ -94,15 +94,16 @@
   inset: 0;
   z-index: 20;
   background: var(--bg);
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  justify-content: center;
-  padding: 40px;
   overflow-y: auto;
+}
+
+.onboarding-inner {
   width: 560px;
   max-width: 100%;
   margin: 0 auto;
+  padding: 40px;
+  padding-top: 15vh;
+  padding-bottom: 20vh;
 }
 
 .onboarding-brand {
@@ -272,6 +273,8 @@
   flex-direction: column;
   gap: 2px;
   padding: 6px 4px;
+  max-height: 160px;
+  overflow-y: auto;
 }
 
 .selected-fire-row {

@@ -109,6 +109,7 @@ export default function Onboarding({ onComplete, onViewDemo }: Props) {
 
   return (
     <div className="onboarding">
+      <div className="onboarding-inner">
         <div className="onboarding-brand">BREATHLINE</div>
         <div className="onboarding-sub">Wildland exposure record</div>
 
@@ -262,6 +263,7 @@ export default function Onboarding({ onComplete, onViewDemo }: Props) {
         <button className="demo-link" onClick={onViewDemo}>
           Or view demo with sample data
         </button>
+      </div>
     </div>
   )
 }
