@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import type { Fire } from '../data/fires'
 
 type Totals = {
@@ -53,11 +54,27 @@ function DetailPopover({
   totals: Totals
   onClose: () => void
 }) {
+  const closeRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    closeRef.current?.focus()
+  }, [])
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [onClose])
+
   return (
-    <div className="fire-detail-popover" onClick={(e) => e.stopPropagation()}>
+    <div className="fire-detail-popover" role="dialog" aria-label={`${fire.name} details`} onClick={(e) => e.stopPropagation()}>
       <div className="fire-detail-popover-header">
         <span className="fire-detail-popover-name">{fire.name} · {fire.year}</span>
-        <button className="fire-detail-popover-close" onClick={onClose}>×</button>
+        <button ref={closeRef} className="fire-detail-popover-close" onClick={onClose} aria-label="Close detail">
+          <span aria-hidden="true">×</span>
+        </button>
       </div>
 
       <div className="fire-detail-meta">
@@ -112,7 +129,7 @@ export default function Deployments({
     <div className="deployments" onClick={(e) => e.stopPropagation()}>
       <div className={`deployments-list-wrap ${selectedFire ? 'hidden' : ''}`}>
         <div className="deployments-header">
-          <span className="deployments-col-label">Deployments</span>
+          <h2 className="deployments-col-label">Deployments</h2>
           <span className="deployments-col-label right">Yr</span>
           <span className="deployments-col-label right">Da</span>
         </div>

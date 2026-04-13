@@ -71,6 +71,18 @@ export default function Onboarding({ onComplete, onViewDemo }: Props) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  const handleFiresKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setFiresOpen(false)
+    }
+  }
+
+  const handleCrewKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      setCrewOpen(false)
+    }
+  }
+
   const canSubmit = name.trim().length > 0 && selected.size > 0
 
   const handleSubmit = () => {
@@ -110,7 +122,7 @@ export default function Onboarding({ onComplete, onViewDemo }: Props) {
   return (
     <div className="onboarding">
       <div className="onboarding-inner">
-        <div className="onboarding-brand">BREATHLINE</div>
+        <h1 className="onboarding-brand">BREATHLINE</h1>
         <div className="onboarding-sub">Wildland exposure record</div>
 
         <p className="onboarding-desc">
@@ -121,15 +133,26 @@ export default function Onboarding({ onComplete, onViewDemo }: Props) {
         </p>
 
         {/* ---- Fire selection combobox ---- */}
-        <div className="field-label" style={{ marginTop: 4 }}>
+        <label className="field-label" htmlFor="fire-search" style={{ marginTop: 4 }}>
           Select your deployments
-        </div>
-        <div className="fire-combobox" ref={firesRef}>
+        </label>
+        <div
+          className="fire-combobox"
+          ref={firesRef}
+          role="combobox"
+          aria-expanded={firesOpen}
+          aria-haspopup="listbox"
+          aria-owns={firesOpen ? 'fire-listbox' : undefined}
+          onKeyDown={handleFiresKeyDown}
+        >
           <input
+            id="fire-search"
             className="field-input fire-search"
             type="text"
             placeholder="Search fires by name, location, or year..."
             value={search}
+            aria-autocomplete="list"
+            aria-controls={firesOpen ? 'fire-listbox' : undefined}
             onChange={(e) => {
               setSearch(e.target.value)
               setFiresOpen(true)
@@ -138,19 +161,21 @@ export default function Onboarding({ onComplete, onViewDemo }: Props) {
           />
           {firesOpen && (
             <div className="fire-dropdown">
-              <ul className="fire-dropdown-list">
+              <ul className="fire-dropdown-list" id="fire-listbox" role="listbox" aria-label="Fires">
                 {Array.from(yearGroups.entries()).map(([year, fires]) => (
-                  <li key={year} className="year-group">
-                    <div className="year-group-label">{year}</div>
+                  <li key={year} className="year-group" role="group" aria-label={String(year)}>
+                    <div className="year-group-label" aria-hidden="true">{year}</div>
                     {fires.map((fire) => {
                       const checked = selected.has(fire.id)
                       return (
                         <button
                           key={fire.id}
+                          role="option"
+                          aria-selected={checked}
                           className={`onboarding-fire-row ${checked ? 'checked' : ''}`}
                           onClick={() => toggle(fire.id)}
                         >
-                          <span className={`checkbox ${checked ? 'checked' : ''}`}>
+                          <span className={`checkbox ${checked ? 'checked' : ''}`} aria-hidden="true">
                             {checked ? '✓' : ''}
                           </span>
                           <span className="onboarding-fire-name">{fire.name}</span>
@@ -163,7 +188,7 @@ export default function Onboarding({ onComplete, onViewDemo }: Props) {
                   </li>
                 ))}
                 {filteredFires.length === 0 && (
-                  <li className="no-results">No fires found for "{search}"</li>
+                  <li className="no-results" role="option" aria-disabled="true">No fires found for "{search}"</li>
                 )}
               </ul>
             </div>
@@ -187,18 +212,23 @@ export default function Onboarding({ onComplete, onViewDemo }: Props) {
                       <input
                         type="number"
                         className="days-input"
-                        value={days}
-                        min={1}
+                        value={days === 0 ? '' : days}
+                        min={0}
                         max={90}
+                        aria-label={`Days deployed for ${f.name}`}
                         onChange={(e) => {
+                          if (e.target.value === '') {
+                            setDays(f.id, 0)
+                            return
+                          }
                           const v = parseInt(e.target.value)
-                          if (!isNaN(v) && v > 0) setDays(f.id, v)
+                          if (!isNaN(v) && v >= 0) setDays(f.id, v)
                         }}
                       />
-                      <span className="days-label">days</span>
+                      <span className="days-label" aria-hidden="true">days</span>
                     </div>
-                    <button className="remove-fire" onClick={() => toggle(f.id)}>
-                      ×
+                    <button className="remove-fire" onClick={() => toggle(f.id)} aria-label={`Remove ${f.name}`}>
+                      <span aria-hidden="true">×</span>
                     </button>
                   </div>
                 )
@@ -210,8 +240,9 @@ export default function Onboarding({ onComplete, onViewDemo }: Props) {
         {/* ---- Identity (deferred) ---- */}
         <div className="onboarding-identity">
           <div className="field">
-            <label className="field-label">Your name</label>
+            <label className="field-label" htmlFor="firefighter-name">Your name</label>
             <input
+              id="firefighter-name"
               className="field-input"
               type="text"
               placeholder="e.g. Daniel Ramirez"
@@ -219,13 +250,24 @@ export default function Onboarding({ onComplete, onViewDemo }: Props) {
               onChange={(e) => setName(e.target.value)}
             />
           </div>
-          <div className="field" ref={crewRef}>
-            <label className="field-label">Crew (optional)</label>
+          <div
+            className="field"
+            ref={crewRef}
+            role="combobox"
+            aria-expanded={crewOpen && filteredCrews.length > 0}
+            aria-haspopup="listbox"
+            aria-owns={crewOpen && filteredCrews.length > 0 ? 'crew-listbox' : undefined}
+            onKeyDown={handleCrewKeyDown}
+          >
+            <label className="field-label" htmlFor="crew-input">Crew (optional)</label>
             <input
+              id="crew-input"
               className="field-input"
               type="text"
               placeholder="Search crews..."
               value={crew}
+              aria-autocomplete="list"
+              aria-controls={crewOpen && filteredCrews.length > 0 ? 'crew-listbox' : undefined}
               onChange={(e) => {
                 setCrew(e.target.value)
                 setCrewOpen(true)
@@ -233,11 +275,12 @@ export default function Onboarding({ onComplete, onViewDemo }: Props) {
               onFocus={() => setCrewOpen(true)}
             />
             {crewOpen && filteredCrews.length > 0 && (
-              <ul className="crew-dropdown">
+              <ul className="crew-dropdown" id="crew-listbox" role="listbox" aria-label="Crews">
                 {filteredCrews.slice(0, 8).map((c) => (
-                  <li key={c}>
+                  <li key={c} role="option" aria-selected={crew === c}>
                     <button
                       className="crew-option"
+                      tabIndex={-1}
                       onClick={() => {
                         setCrew(c)
                         setCrewOpen(false)
@@ -253,9 +296,9 @@ export default function Onboarding({ onComplete, onViewDemo }: Props) {
         </div>
 
         <button
-          className="generate-btn"
-          disabled={!canSubmit}
-          onClick={handleSubmit}
+          className={`generate-btn ${!canSubmit ? 'disabled' : ''}`}
+          aria-disabled={!canSubmit}
+          onClick={() => { if (canSubmit) handleSubmit() }}
         >
           {buttonLabel}
         </button>

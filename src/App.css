@@ -4,7 +4,7 @@
   --glass-border: rgba(232, 235, 240, 0.06);
   --text: #e8ebf0;
   --text-dim: rgba(232, 235, 240, 0.65);
-  --text-faint: rgba(232, 235, 240, 0.45);
+  --text-faint: rgba(232, 235, 240, 0.55);
   --accent-warm: #f2a647;
   --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, monospace;
@@ -182,6 +182,11 @@
 
 .field-input:focus {
   border-color: rgba(232, 235, 240, 0.25);
+}
+
+.field-input:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
 }
 
 .fire-search {
@@ -469,12 +474,13 @@
   transition: opacity 0.15s;
 }
 
-.generate-btn:disabled {
+.generate-btn.disabled,
+.generate-btn[aria-disabled="true"] {
   opacity: 0.3;
   cursor: default;
 }
 
-.generate-btn:not(:disabled):hover {
+.generate-btn:not([aria-disabled="true"]):hover {
   opacity: 0.9;
 }
 
@@ -645,7 +651,7 @@
   padding: 16px 0;
   width: 260px;
   max-height: 100%;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 .deployments-header {
@@ -746,6 +752,8 @@
 
 .deployments-list-wrap {
   transition: opacity 0.2s ease;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
 }
 
 .deployments-list-wrap.hidden {
@@ -755,14 +763,18 @@
 
 .fire-detail-popover {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 20;
   background: rgba(10, 12, 16, 0.94);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
   border-radius: 8px;
   padding: 20px 18px;
   overflow-y: auto;
+  max-height: calc(100vh - 180px);
   animation: detail-slide-in 0.25s ease-out;
 }
 
@@ -1113,7 +1125,9 @@
 }
 
 .total-chem-group:hover .chem-context,
-.fire-chem-group:hover .chem-context {
+.total-chem-group:focus-within .chem-context,
+.fire-chem-group:hover .chem-context,
+.fire-chem-group:focus-within .chem-context {
   max-height: 40px;
   opacity: 1;
   margin-top: 3px;
@@ -1275,4 +1289,34 @@
   background: rgba(255, 255, 255, 0.06);
   color: var(--text);
   border-color: rgba(232, 235, 240, 0.25);
+}
+
+/* ============ Global focus & a11y ============ */
+
+:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 2px;
+}
+
+.field-input:focus-visible {
+  outline-offset: 0;
+}
+
+h1, h2 {
+  margin: 0;
+  font: inherit;
+}
+
+.scrubber-track:focus-visible {
+  outline: 2px solid var(--accent-warm);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -96,7 +96,7 @@ export default function Totals({ visibleFires, totals: t, name, crew, allFires }
 
   return (
     <div className="totals" onClick={(e) => e.stopPropagation()}>
-      <div className="totals-title">Career totals</div>
+      <h2 className="totals-title">Career totals</h2>
 
       <div className="totals-stats">
         <div>

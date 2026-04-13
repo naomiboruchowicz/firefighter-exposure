@@ -32,7 +32,7 @@ export default function FireList({
     <aside className="panel panel-left">
       <div className="panel-header">
         <div className="panel-title">Deployments</div>
-        <button className="add-btn">+ Add</button>
+        <button className="add-btn">+ Add deployment</button>
       </div>
 
       <ul className="fire-list">
@@ -41,24 +41,26 @@ export default function FireList({
           const selected = selectedFireId === fire.id
           const fuel = dominantFuel(fire)
           return (
-            <li
-              key={fire.id}
-              className={`fire-row ${selected ? 'selected' : ''} ${!visible ? 'future' : ''}`}
-              onClick={() => {
-                if (!visible) return
-                onSelectFire(selected ? null : fire.id)
-              }}
-            >
-              <div className="fire-row-main">
-                <span className="fire-name">{fire.name}</span>
-                <span className="fire-year">{fire.year}</span>
-              </div>
-              <div className="fire-row-meta">
-                <span className={`fuel-tag fuel-${fuel}`}>
-                  {fuelLabel(fuel)}
-                </span>
-                <span className="fire-days">{fire.daysWorked}d</span>
-              </div>
+            <li key={fire.id}>
+              <button
+                className={`fire-row ${selected ? 'selected' : ''} ${!visible ? 'future' : ''}`}
+                onClick={() => {
+                  if (!visible) return
+                  onSelectFire(selected ? null : fire.id)
+                }}
+                aria-pressed={selected}
+              >
+                <div className="fire-row-main">
+                  <span className="fire-name">{fire.name}</span>
+                  <span className="fire-year">{fire.year}</span>
+                </div>
+                <div className="fire-row-meta">
+                  <span className={`fuel-tag fuel-${fuel}`}>
+                    {fuelLabel(fuel)}
+                  </span>
+                  <span className="fire-days">{fire.daysWorked}d</span>
+                </div>
+              </button>
             </li>
           )
         })}

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useRef } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import Onboarding from './components/Onboarding'
 import Scene from './components/Scene'
 import Deployments from './components/Deployments'
@@ -59,14 +59,42 @@ function ScrubberTrack({
     onTimeIndexChange(idx)
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      onTimeIndexChange(Math.min(timeIndex + 1, fires.length))
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      onTimeIndexChange(Math.max(timeIndex - 1, 0))
+    } else if (e.key === 'Home') {
+      e.preventDefault()
+      onTimeIndexChange(0)
+    } else if (e.key === 'End') {
+      e.preventDefault()
+      onTimeIndexChange(fires.length)
+    }
+  }
+
   return (
-    <div className="scrubber-track" ref={trackRef} onClick={handleTrackClick}>
+    <div
+      className="scrubber-track"
+      ref={trackRef}
+      onClick={handleTrackClick}
+      role="slider"
+      tabIndex={0}
+      aria-label="Career timeline"
+      aria-valuemin={0}
+      aria-valuemax={fires.length}
+      aria-valuenow={timeIndex}
+      aria-valuetext={timeIndex === 0 ? 'Before deployment' : `${timeIndex} of ${fires.length} fires`}
+      onKeyDown={handleKeyDown}
+    >
       <div className="scrubber-line" />
       <div
         className="scrubber-thumb"
         style={{ left: `${thumbPct}%` }}
       />
-      <div className="scrubber-dots">
+      <div className="scrubber-dots" aria-hidden="true">
         {fires.map((fire, i) => {
           const selected = selectedFireId === fire.id
           return (
@@ -78,7 +106,7 @@ function ScrubberTrack({
           )
         })}
       </div>
-      <div className="scrubber-years">
+      <div className="scrubber-years" aria-hidden="true">
         {fires.map((fire, i) => {
           const prevYear = i > 0 ? fires[i - 1].year : null
           if (fire.year === prevYear) return null
@@ -229,8 +257,8 @@ export default function App() {
       )}
 
       {loading && !sceneReady && (
-        <div className="loading-screen">
-          <div className="loading-spinner" />
+        <div className="loading-screen" role="status" aria-live="polite">
+          <div className="loading-spinner" aria-hidden="true" />
           <div className="loading-text">Building your exposure record</div>
         </div>
       )}
@@ -245,7 +273,7 @@ export default function App() {
       )}
 
       {currentFireLabel && (
-        <div className="announce" key={currentFireLabel}>
+        <div className="announce" key={currentFireLabel} aria-live="polite">
           <div className="announce-name">{currentFireLabel}</div>
           <div className="announce-year">{currentFireYear}</div>
         </div>
@@ -254,7 +282,7 @@ export default function App() {
       {profile && sceneReady && (
         <>
           <header className={`header ${introComplete ? 'show' : 'intro'}`}>
-            <div className="brand">BREATHLINE</div>
+            <h1 className="brand">BREATHLINE</h1>
             <div className="identity">
               <span className="identity-name">{profile.name}</span>
               {profile.crew && (
@@ -281,14 +309,14 @@ export default function App() {
 
           <div className="scrubber">
             {introComplete && (
-              <button className="play-btn" onClick={togglePlayback}>
+              <button className="play-btn" onClick={togglePlayback} aria-label={playing ? 'Pause timeline' : 'Play timeline'}>
                 {playing ? (
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
                     <rect x="2" y="1" width="3.5" height="12" rx="1" />
                     <rect x="8.5" y="1" width="3.5" height="12" rx="1" />
                   </svg>
                 ) : (
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
                     <path d="M3 1.5v11l9-5.5z" />
                   </svg>
                 )}
